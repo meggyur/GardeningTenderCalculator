@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("GardeningTenderCalculator")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ccc017eddf84ab7c31a48a362139dd9fb1216f89")]
 [assembly: System.Reflection.AssemblyProductAttribute("GardeningTenderCalculator")]
 [assembly: System.Reflection.AssemblyTitleAttribute("GardeningTenderCalculator")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
