@@ -1,5 +1,6 @@
 namespace Controllers
 {
+    using System.Data.Common;
     using Data;
     using Microsoft.AspNetCore.Mvc;
     
@@ -15,9 +16,9 @@ namespace Controllers
         }
 
         [HttpGet("TestConnection")]
-        public ActionResult<string> TestConnection()
+        public DateTime TestConnection()
         {
-            return Ok("Connection successful");
+            return _daper.LoadDataSingle<DateTime>("SELECT GETDATE()");
         }
 
     }
