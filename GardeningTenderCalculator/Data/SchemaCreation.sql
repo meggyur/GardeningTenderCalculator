@@ -70,17 +70,17 @@ CREATE TABLE [Product] (
     [UnitPrice] int  NULL , -- Calculated via Trigger (Cross-table)
     [UnitPriceModifier] int  NOT NULL,
     [PricePerSession] AS ([Quantity] * [UnitPrice]) PERSISTED,
-    [PricePerYear] AS ([PricePerSession] * [Frequency]) PERSISTED,
+    [PricePerYear] AS (([Quantity] * [UnitPrice]) * [Frequency]) PERSISTED,
     [UnitTimePerMin] int  NOT NULL ,
     [UnitTimeModifier] int  NOT NULL DEFAULT 1 ,
     [MaterialCostPerUnit] int  NULL ,
     [MaterialCostPerSession] AS ([Quantity] * [MaterialCostPerUnit]) PERSISTED,
-    [MaterialCostPerYear] AS ([MaterialCostPerSession] * [Frequency]) PERSISTED,
+    [MaterialCostPerYear] AS (([Quantity] * [MaterialCostPerUnit]) * [Frequency]) PERSISTED,
     [FuelCostPerUnit] int  NULL , --the machine's fuel needs to work, calculated via trigger (Cross-table)
     [FuelCostPerSession] AS ([Quantity] * [FuelCostPerUnit]) PERSISTED,
-    [FuelCostPerYear] AS ([FuelCostPerSession] * [Frequency]) PERSISTED,
+    [FuelCostPerYear] AS (([Quantity] * [FuelCostPerUnit]) * [Frequency]) PERSISTED,
     [LaborTimePerSessionInHours] AS ([Quantity] * ([UnitTimePerMin] * [UnitTimeModifier] / 60)) PERSISTED,
-    [LaborTimePerYearInHours] AS ([LaborTimePerSessionInHours] * [Frequency]) PERSISTED,
+    [LaborTimePerYearInHours] AS (([Quantity] * ([UnitTimePerMin] * [UnitTimeModifier] / 60)) * [Frequency]) PERSISTED,
     CONSTRAINT [PK_Product] PRIMARY KEY CLUSTERED (
         [ProductID] ASC
     ),
@@ -149,7 +149,6 @@ BEGIN
         pd.QuantityUnit = pc.QuantityUnit,
         pd.UnitPriceModifier = pc.UnitPriceModifier, 
         pd.MaterialCostPerUnit = pc.MaterialCostPerUnit,
-        pd.FuelNeededPerUnit = pc.FuelNeededPerUnit,
         pd.UnitTimePerMin = pc.UnitTimePerMin
     FROM [Product] pd
     INNER JOIN [inserted] i ON pd.ProductID = i.ProductID
