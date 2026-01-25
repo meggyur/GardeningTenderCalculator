@@ -1,6 +1,5 @@
 namespace Controllers
 {
-    using System.Data.Common;
     using Data;
     using Microsoft.AspNetCore.Mvc;
     
@@ -20,6 +19,8 @@ namespace Controllers
         {
             return _daper.LoadDataSingle<DateTime>("SELECT GETDATE()");
         }
+
+        
 
     }
 }

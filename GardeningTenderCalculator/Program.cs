@@ -1,9 +1,3 @@
-using System.ComponentModel;
-using System.Data;
-using System.Data.Common;
-using Dapper;
-using Microsoft.Data.SqlClient;
-
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
