@@ -8,7 +8,7 @@ SET XACT_ABORT ON
 
 BEGIN TRANSACTION QUICKDBD
 
-CREATE TABLE [Customer] (
+CREATE TABLE [PricingSchema].[Customer] (
     [CustomerID] INT IDENTITY(1,1) NOT NULL ,
     [Name] NVARCHAR(255)  NOT NULL ,
     [Email] NVARCHAR(255)  NOT NULL ,
@@ -25,32 +25,32 @@ CREATE TABLE [Customer] (
     )
 )
 
-CREATE TABLE [Project] (
+CREATE TABLE [PricingSchema].[Project] (
     [ProjectID] INT IDENTITY(1,1) NOT NULL ,
-    [CustomerID] INT  NOT NULL ,
+    [CustomerID] INT   NOT NULL ,
     [Name] NVARCHAR(255)  NOT NULL ,
     [CompanyName] NVARCHAR(255)  NOT NULL ,
     [CompanyAdress] NVARCHAR(255)  NOT NULL ,
     [CreationDate] DATETIME  DEFAULT GETDATE() ,
-    [Deadline] DATETIME  NULL ,
+    [Deadline] NVARCHAR(255)  NULL ,
     [Comment] NVARCHAR(255)  NULL ,
-    [HourlyRate] int  NOT NULL ,
-    [Margin] int  NOT NULL ,
-    [WorkDayPerMonth] int  NOT NULL ,
-    [WorkTimePerDay] int  NOT NULL ,
-    [FuelCost] int  NOT NULL ,
+    [HourlyRate] int   NULL ,
+    [Margin] int   NULL ,
+    [WorkDayPerMonth] int   NULL ,
+    [WorkTimePerDay] int   NULL ,
+    [FuelCost] int   NULL ,
     CONSTRAINT [PK_Project] PRIMARY KEY CLUSTERED (
         [ProjectID] ASC
     ),
     CONSTRAINT [FK_Project_Customer]
         FOREIGN KEY ([CustomerID])
-        REFERENCES [Customer]([CustomerID]
+        REFERENCES [PricingSchema].[Customer]([CustomerID]
     ),
     CONSTRAINT [UK_Project_Customer_Name]
     UNIQUE (CustomerID, Name)
 )
 
-CREATE TABLE [ProjectCatalog] (
+CREATE TABLE [PricingSchema].[ProjectCatalog] (
     [HourlyRate] int  NOT NULL ,
     [Margin] int  NOT NULL ,
     [WorkDayPerMonth] int  NOT NULL ,
@@ -58,21 +58,21 @@ CREATE TABLE [ProjectCatalog] (
     [FuelCost] int  NOT NULL 
 )
 
-CREATE TABLE [Product] (
+CREATE TABLE [PricingSchema].[Product] (
     [ProductID] int  IDENTITY(1,1) NOT NULL ,
-    [ProjectID] int  NOT NULL ,
-    [Category] NVARCHAR(255)  NOT NULL ,
-    [Name] NVARCHAR(255)  NOT NULL ,
+    [ProjectID] int   NOT NULL ,
+    [Category] NVARCHAR(255)   NULL ,
+    [Name] NVARCHAR(255)   NULL ,
     [Type] NVARCHAR(255)  NULL ,
     [Quantity] int  NULL ,
-    [QuantityUnit] NVARCHAR(255)  NOT NULL ,
-    [Frequency] int  NOT NULL ,
+    [QuantityUnit] NVARCHAR(255)   NULL ,
+    [Frequency] int   NULL ,
     [UnitPrice] int  NULL , -- Calculated via Trigger (Cross-table)
     [UnitPriceModifier] int  NOT NULL,
     [PricePerSession] AS ([Quantity] * [UnitPrice]) PERSISTED,
     [PricePerYear] AS (([Quantity] * [UnitPrice]) * [Frequency]) PERSISTED,
-    [UnitTimePerMin] int  NOT NULL ,
-    [UnitTimeModifier] int  NOT NULL DEFAULT 1 ,
+    [UnitTimePerMin] int   NULL ,
+    [UnitTimeModifier] int   NULL DEFAULT 1 ,
     [MaterialCostPerUnit] int  NULL ,
     [MaterialCostPerSession] AS ([Quantity] * [MaterialCostPerUnit]) PERSISTED,
     [MaterialCostPerYear] AS (([Quantity] * [MaterialCostPerUnit]) * [Frequency]) PERSISTED,
@@ -86,11 +86,11 @@ CREATE TABLE [Product] (
     ),
     CONSTRAINT [FK_Product_Project]
         FOREIGN KEY ([ProjectID])
-        REFERENCES [Project]([ProjectID]
+        REFERENCES [PricingSchema].[Project]([ProjectID]
     ),
 )
 
-CREATE TABLE [ProductCatalog] (
+CREATE TABLE [PricingSchema].[ProductCatalog] (
     [ProductCatalogID] int  IDENTITY(1,1) NOT NULL ,
     [Category] NVARCHAR(255)  NOT NULL ,
     [Name] NVARCHAR(255)  NOT NULL ,
@@ -114,7 +114,7 @@ CREATE TABLE [ProductCatalog] (
 GO
 
 CREATE TRIGGER [trg_Project_Insert]
-ON [Project]
+ON [PricingSchema].[Project]
 AFTER INSERT
 AS
 BEGIN
@@ -129,14 +129,14 @@ BEGIN
         pj.WorkDayPerMonth = pc.WorkDayPerMonth,
         pj.WorkTimePerDay = pc.WorkTimePerDay,
         pj.FuelCost = pc.FuelCost
-    FROM [Project] pj
+    FROM [PricingSchema].[Project] pj
     INNER JOIN [inserted] i ON pj.ProjectID = i.ProjectID
-    CROSS JOIN (SELECT TOP 1 * FROM [ProjectCatalog]) pc
+    CROSS JOIN (SELECT TOP 1 * FROM [PricingSchema].[ProjectCatalog]) pc
 END
 GO
 
 CREATE TRIGGER [trg_Product_Insert]
-ON [Product]
+ON [PricingSchema].[Product]
 AFTER INSERT
 AS
 BEGIN
@@ -150,9 +150,9 @@ BEGIN
         pd.UnitPriceModifier = pc.UnitPriceModifier, 
         pd.MaterialCostPerUnit = pc.MaterialCostPerUnit,
         pd.UnitTimePerMin = pc.UnitTimePerMin
-    FROM [Product] pd
+    FROM [PricingSchema].[Product] pd
     INNER JOIN [inserted] i ON pd.ProductID = i.ProductID
-    INNER JOIN [ProductCatalog] pc ON 
+    INNER JOIN [PricingSchema].[ProductCatalog] pc ON 
         pd.Category = pc.Category AND 
         pd.Name = pc.Name AND 
         (pd.Type = pc.Type OR (pd.Type IS NULL AND pc.Type IS NULL))
@@ -160,7 +160,7 @@ END
 GO
 
 CREATE TRIGGER [trg_Product_Calculate]
-ON [Product]
+ON [PricingSchema].[Product]
 AFTER INSERT, UPDATE
 AS
 BEGIN
@@ -170,11 +170,11 @@ BEGIN
     SET 
         pd.UnitPrice = ( 100 * ( pd.UnitTimePerMin * pj.HourlyRate * pd.UnitPriceModifier + pd.MaterialCostPerUnit + pd.FuelCostPerUnit ) ) / ( 100 - pj.Margin ),
         pd.FuelCostPerUnit = pc.FuelNeededPerUnit * pj.FuelCost
-    FROM [Product] pd
+    FROM [PricingSchema].[Product] pd
     INNER JOIN [inserted] i ON pd.ProductID = i.ProductID
-    INNER JOIN [Project] pj ON 
+    INNER JOIN [PricingSchema].[Project] pj ON 
         pd.ProjectID = pj.ProjectID
-    INNER JOIN [ProductCatalog] pc ON 
+    INNER JOIN [PricingSchema].[ProductCatalog] pc ON 
         pd.Category = pc.Category AND 
         pd.Name = pc.Name AND 
         (pd.Type = pc.Type OR (pd.Type IS NULL AND pc.Type IS NULL))
