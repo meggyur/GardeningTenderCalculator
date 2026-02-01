@@ -1,23 +1,20 @@
-namespace GardeningTenderCalculator.Models
+namespace GardeningTenderCalculator.DTOs
 {
-    public partial class Project
+    public partial class ProjectDTO
     {
-        public int ProjectID { get; set; }
-        public int CustomerID { get; set; }
+        public int CustomerId { get; set; }
         public string Name { get; set; }
         public string CompanyName { get; set; }
         public string CompanyAdress { get; set; }
-        public DateTime CreationDate { get; set; }
         public string Deadline { get; set; }
         public string Comment { get; set; }
-        public int HourlyRate { get; set; }
-        public decimal Margin { get; set; }
-        public int WorkDayPerMonth { get; set; }
-        public decimal WorkTimePerDay { get; set; }
-        public decimal FuelCost { get; set; }
 
-        public Project()
+        public ProjectDTO()
         {
+            if(CustomerId == 0)
+            {
+                CustomerId = 1;
+            }
             if(Name == null)
             {
                 Name = "";

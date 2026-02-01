@@ -1,4 +1,4 @@
-namespace Data
+namespace GardeningTenderCalculator.Data
 {
     using System.Data;
     using Dapper;
@@ -28,11 +28,11 @@ namespace Data
             return dbConnection.QuerySingle<T>(scl);
         }
 
-         public bool ExecuteSql<T>(string scl)
+         public bool ExecuteSql<T>(string scl, object parameters)
         {
             using IDbConnection dbConnection = new SqlConnection(_config.GetConnectionString("DefaultConnection"));
 
-            return dbConnection.Execute(scl) > 0;
+            return dbConnection.Execute(scl, parameters) > 0;
         }
 
         public int ExecuteSqlWithRowCount<T>(string scl)

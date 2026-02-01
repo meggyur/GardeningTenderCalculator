@@ -1,3 +1,6 @@
+CREATE DATABASE GardeningTenderCalculatorDatabase
+GO
+
 USE GardeningTenderCalculatorDatabase
 GO
 
@@ -12,7 +15,6 @@ CREATE TABLE [PricingSchema].[Customer] (
     [CustomerID] INT IDENTITY(1,1) NOT NULL ,
     [Name] NVARCHAR(255)  NOT NULL ,
     [Email] NVARCHAR(255)  NOT NULL ,
-    [PasswordHash] VARBINARY(256)  NULL , -- It depends on the Hash's form
     [CompanyName] NVARCHAR(255)  NULL ,
     CONSTRAINT [PK_Customer] PRIMARY KEY CLUSTERED (
         [CustomerID] ASC
@@ -25,6 +27,12 @@ CREATE TABLE [PricingSchema].[Customer] (
     )
 )
 
+CREATE TABLE [PricingSchema].[Auth](
+    [Email] NVARCHAR(255)  NULL ,
+    [PasswordHash] VARBINARY(MAX)  NULL ,
+    [PasswordSalt] VARBINARY(MAX)  NULL
+)
+
 CREATE TABLE [PricingSchema].[Project] (
     [ProjectID] INT IDENTITY(1,1) NOT NULL ,
     [CustomerID] INT   NOT NULL ,
@@ -35,10 +43,10 @@ CREATE TABLE [PricingSchema].[Project] (
     [Deadline] NVARCHAR(255)  NULL ,
     [Comment] NVARCHAR(255)  NULL ,
     [HourlyRate] int   NULL ,
-    [Margin] int   NULL ,
-    [WorkDayPerMonth] int   NULL ,
-    [WorkTimePerDay] int   NULL ,
-    [FuelCost] int   NULL ,
+    [Margin] decimal(18,2)  NULL ,
+    [WorkDayPerMonth] int  NULL ,
+    [WorkTimePerDay] decimal(18,2)  NULL ,
+    [FuelCost] decimal(18,2)  NULL ,
     CONSTRAINT [PK_Project] PRIMARY KEY CLUSTERED (
         [ProjectID] ASC
     ),
@@ -52,35 +60,35 @@ CREATE TABLE [PricingSchema].[Project] (
 
 CREATE TABLE [PricingSchema].[ProjectCatalog] (
     [HourlyRate] int  NOT NULL ,
-    [Margin] int  NOT NULL ,
+    [Margin] decimal(18,2)  NOT NULL ,
     [WorkDayPerMonth] int  NOT NULL ,
-    [WorkTimePerDay] int  NOT NULL ,
-    [FuelCost] int  NOT NULL 
+    [WorkTimePerDay] decimal(18,2)  NOT NULL ,
+    [FuelCost] decimal(18,2)  NOT NULL 
 )
 
 CREATE TABLE [PricingSchema].[Product] (
     [ProductID] int  IDENTITY(1,1) NOT NULL ,
-    [ProjectID] int   NOT NULL ,
-    [Category] NVARCHAR(255)   NULL ,
-    [Name] NVARCHAR(255)   NULL ,
+    [ProjectID] int  NOT NULL ,
+    [Category] NVARCHAR(255)  NULL ,
+    [Name] NVARCHAR(255)  NULL ,
     [Type] NVARCHAR(255)  NULL ,
     [Quantity] int  NULL ,
-    [QuantityUnit] NVARCHAR(255)   NULL ,
+    [QuantityUnit] NVARCHAR(255)  NULL , -- Copyed data via trigger
     [Frequency] int   NULL ,
-    [UnitPrice] int  NULL , -- Calculated via Trigger (Cross-table)
-    [UnitPriceModifier] int  NOT NULL,
-    [PricePerSession] AS ([Quantity] * [UnitPrice]) PERSISTED,
-    [PricePerYear] AS (([Quantity] * [UnitPrice]) * [Frequency]) PERSISTED,
-    [UnitTimePerMin] int   NULL ,
-    [UnitTimeModifier] int   NULL DEFAULT 1 ,
-    [MaterialCostPerUnit] int  NULL ,
-    [MaterialCostPerSession] AS ([Quantity] * [MaterialCostPerUnit]) PERSISTED,
-    [MaterialCostPerYear] AS (([Quantity] * [MaterialCostPerUnit]) * [Frequency]) PERSISTED,
-    [FuelCostPerUnit] int  NULL , --the machine's fuel needs to work, calculated via trigger (Cross-table)
-    [FuelCostPerSession] AS ([Quantity] * [FuelCostPerUnit]) PERSISTED,
-    [FuelCostPerYear] AS (([Quantity] * [FuelCostPerUnit]) * [Frequency]) PERSISTED,
-    [LaborTimePerSessionInHours] AS ([Quantity] * ([UnitTimePerMin] * [UnitTimeModifier] / 60)) PERSISTED,
-    [LaborTimePerYearInHours] AS (([Quantity] * ([UnitTimePerMin] * [UnitTimeModifier] / 60)) * [Frequency]) PERSISTED,
+    [UnitPrice] decimal(18,2)  NULL , -- Calculated via Trigger (Cross-table)
+    [UnitPriceModifier] decimal(18,2)  NULL, -- Copyed data via trigger
+    [PricePerSession]  AS (CAST([Quantity] * [UnitPrice] AS decimal(18,2))) PERSISTED,
+    [PricePerYear]  AS (CAST([Quantity] * [UnitPrice] * [Frequency] AS decimal(18,2))) PERSISTED,
+    [UnitTimePerMin] decimal(18,2)  NULL , -- Copyed data via trigger
+    [UnitTimeModifier] decimal(18,2)  NULL DEFAULT 1 ,
+    [MaterialCostPerUnit] decimal(18,2)  NULL , -- Copyed data via trigger
+    [MaterialCostPerSession]  AS (CAST([Quantity] * [MaterialCostPerUnit] AS decimal(18,2))) PERSISTED,
+    [MaterialCostPerYear]  AS (CAST(([Quantity] * [MaterialCostPerUnit]) * [Frequency] AS decimal(18,2))) PERSISTED,
+    [FuelCostPerUnit] decimal(18,2)  NULL , --the machine's fuel needs to work, calculated via trigger (Cross-table)
+    [FuelCostPerSession]  AS (CAST([Quantity] * [FuelCostPerUnit] AS decimal(18,2))) PERSISTED,
+    [FuelCostPerYear]  AS (CAST(([Quantity] * [FuelCostPerUnit]) * [Frequency] AS decimal(18,2))) PERSISTED,
+    [LaborTimePerSessionInHours]  AS (CAST([Quantity] * ([UnitTimePerMin] * [UnitTimeModifier] / 60) AS decimal(18,2))) PERSISTED,
+    [LaborTimePerYearInHours]  AS (CAST(([Quantity] * ([UnitTimePerMin] * [UnitTimeModifier] / 60)) * [Frequency] AS decimal(18,2))) PERSISTED,
     CONSTRAINT [PK_Product] PRIMARY KEY CLUSTERED (
         [ProductID] ASC
     ),
@@ -96,11 +104,11 @@ CREATE TABLE [PricingSchema].[ProductCatalog] (
     [Name] NVARCHAR(255)  NOT NULL ,
     [Type] NVARCHAR(255)  NULL ,
     [QuantityUnit] NVARCHAR(255)  NOT NULL ,
-    [UnitPriceModifier] int  NOT NULL ,
-    [UnitTimePerMin] int  NOT NULL ,
-    [MaterialCostPerUnit] int  NULL ,
-    [FuelNeededPerUnit] int  NULL ,
-    constRAINT [PK_ProductCatalog] PRIMARY KEY CLUSTERED (
+    [UnitPriceModifier] decimal(18,2)  NOT NULL ,
+    [UnitTimePerMin] decimal(18,2)  NOT NULL ,
+    [MaterialCostPerUnit] decimal(18,2)  NULL ,
+    [FuelNeededPerUnit] decimal(18,6)  NULL ,
+    CONSTRAINT [PK_ProductCatalog] PRIMARY KEY CLUSTERED (
         [ProductCatalogID] ASC
     ),
     CONSTRAINT [UK_ProductCatalog_Category_Name_Type] UNIQUE (
@@ -168,8 +176,8 @@ BEGIN
 
     UPDATE pd
     SET 
-        pd.UnitPrice = ( 100 * ( pd.UnitTimePerMin * pj.HourlyRate * pd.UnitPriceModifier + pd.MaterialCostPerUnit + pd.FuelCostPerUnit ) ) / ( 100 - pj.Margin ),
-        pd.FuelCostPerUnit = pc.FuelNeededPerUnit * pj.FuelCost
+        pd.FuelCostPerUnit = CAST(pc.FuelNeededPerUnit * pj.FuelCost AS decimal(18,2)),
+        pd.UnitPrice = CAST(( 100 * ( pd.UnitTimePerMin/60 * pj.HourlyRate * pd.UnitPriceModifier + pd.MaterialCostPerUnit + pd.FuelCostPerUnit ) ) / ( 100 - pj.Margin ) AS decimal(18,6))
     FROM [PricingSchema].[Product] pd
     INNER JOIN [inserted] i ON pd.ProductID = i.ProductID
     INNER JOIN [PricingSchema].[Project] pj ON 

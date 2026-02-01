@@ -1,4 +1,4 @@
-namespace GardeningTenderCalculator
+namespace GardeningTenderCalculator.Models
 {
     public partial class Product
     {
@@ -10,20 +10,20 @@ namespace GardeningTenderCalculator
         public int Quantity { get; set; }
         public string QuantityUnit { get; set; }
         public int Frequency { get; set; }
-        public int UnitPrice { get; set; }
-        public int UnitPriceModifier { get; set; }
-        public int PricePerSession { get; set; }
-        public int PricePerYear { get; set; }
-        public int UnitTimePerMin { get; set; }
-        public int UnitTimeModifier { get; set; }
-        public int MaterialCostPerUnit { get; set; }
-        public int MaterialCostPerSession { get; set; }
-        public int MaterialCostPerYear { get; set; }
-        public int FuelCostPerUnit { get; set; }
-        public int FuelCostPerSession { get; set; }
-        public int FuelCostPerYear { get; set; }
-        public int LaborTimePerSessionInHours { get; set; }
-        public int LaborTimePerYearInHours { get; set; }
+        public decimal UnitPrice { get; set; }
+        public decimal UnitPriceModifier { get; set; }
+        public decimal PricePerSession { get; set; }
+        public decimal PricePerYear { get; set; }
+        public decimal UnitTimePerMin { get; set; }
+        public decimal UnitTimeModifier { get; set; }
+        public decimal MaterialCostPerUnit { get; set; }
+        public decimal MaterialCostPerSession { get; set; }
+        public decimal MaterialCostPerYear { get; set; }
+        public decimal FuelCostPerUnit { get; set; }
+        public decimal FuelCostPerSession { get; set; }
+        public decimal FuelCostPerYear { get; set; }
+        public decimal LaborTimePerSessionInHours { get; set; }
+        public decimal LaborTimePerYearInHours { get; set; }
 
         public Product()
         {

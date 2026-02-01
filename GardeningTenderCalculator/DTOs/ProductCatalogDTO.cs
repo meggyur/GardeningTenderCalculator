@@ -1,8 +1,7 @@
-namespace GardeningTenderCalculator.Models
+    namespace GardeningTenderCalculator.DTOs
 {
-    public partial class ProductCatalog
+    public partial class ProductCatalogDTO
     {
-        public int ProductCatalogID { get; set; }
         public string Category { get; set; }
         public string Name { get; set; }
         public string Type { get; set; }
@@ -12,7 +11,7 @@ namespace GardeningTenderCalculator.Models
         public decimal MaterialCostPerUnit { get; set; }
         public decimal FuelNeededPerUnit { get; set; }
 
-        public ProductCatalog()
+        public ProductCatalogDTO()
         {
             if(Category == null)
             {

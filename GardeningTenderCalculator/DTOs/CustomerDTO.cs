@@ -1,13 +1,12 @@
-namespace GardeningTenderCalculator.Models
+namespace GardeningTenderCalculator.DTOs
 {
-    public partial class Customer
+    public partial class CustomerDTO
     {
-        public int CustomerID { get; set; }
         public string Name { get; set; }
         public string Email { get; set; }
         public string CompanyName { get; set; }
 
-        public Customer()
+        public CustomerDTO()
         {
             if(Name == null)
             {
